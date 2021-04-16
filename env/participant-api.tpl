@@ -3,7 +3,7 @@ DEBUG_MODE=false
 
 # Provided in common
 #GATEWAY_LISTEN_PORT=<port>
-CORS_ALLOW_ORIGINS={{WEB_CLIENT_HOST}}
+CORS_ALLOW_ORIGINS={{WEB_CLIENT_URL}}
 
 # clients:
 #ADDR_USER_MANAGEMENT_SERVICE=<user-m-addr>:<user-m-port>
