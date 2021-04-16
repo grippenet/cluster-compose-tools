@@ -1,14 +1,19 @@
 DB_TIMEOUT=30
 DB_IDLE_CONN_TIMEOUT=45
 DB_MAX_POOL_SIZE=8
+
+# Prefix to be used for all DB names.
+# DB names are constructed with DB_DB_NAME_PREFIX + Instance name + {DB}
+# See https://github.com/influenzanet/influenzanet/wiki/Database-Infos
 DB_DB_NAME_PREFIX={{DB_NAME_PREFIX}}
 
+# Connection to Global Database
 GLOBAL_DB_CONNECTION_STR="{{DEV_DB_HOST}}/{{DEV_DB_AUTHDB}}?retryWrites=true&w=majority"
 
 # Use for test
 GLOBAL_DB_CONNECTION_PREFIX=
 
-# should be secret:
+# Global DB credentials
 GLOBAL_DB_USERNAME={{DEV_DB_USER}}
 GLOBAL_DB_PASSWORD={{DEV_DB_PASSWORD}}
 
