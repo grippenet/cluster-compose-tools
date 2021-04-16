@@ -1,6 +1,6 @@
 services:
     logging:
-        image: docker.epipop.fr/ifn/logging-service:latest
+        image: docker.epipop.fr/ifn/logging-service:v0.1.0
         container_name: logging
         hostname: logging
         env_file:
@@ -77,7 +77,7 @@ services:
         ports:
             - 8090:8090
     public-web-app:
-        image: docker.epipop.fr/ifn/web-app:latest
+        image: docker.epipop.fr/ifn/web-app:v0.0.1
         container_name: public-web-app 
         hostname: public-web-app
         env_file:
