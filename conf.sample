@@ -1,0 +1,25 @@
+
+# DOCKER Namespace to push the images
+# For eaxmple youraccount/influenzanet
+DOCKER_NS=
+
+# Push if 1
+DOCKER_PUSH=0
+
+# Location of web app code
+WEB_APP_SRC=src/web-app
+
+# Location of Logging service
+LOGGING_SRC=src/logging-service
+
+# Location of API_GATEWAY service
+API_GATEWAY_SRC=src/api-gateway
+
+# Location of Study service
+STUDY_SRC=src/study-service
+
+# Location of User management service
+USER_MANAGEMENT_SRC=src/user-management-service
+
+# Location of messaging service
+MESSAGING_SRC=src/messaging-service

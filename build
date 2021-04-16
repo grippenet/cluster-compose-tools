@@ -1,0 +1,121 @@
+#!/bin/sh
+DIR=$(dirname $0)
+cd $DIR
+
+BASE=$(readlink -f docker-compose.yml)
+BASEDIR=$(dirname $BASE)
+
+IFN_NS=github.com/influenzanet
+
+get_git_tag() {
+    git describe --tags --abbrev=0
+}
+
+show_help() {
+    echo "Build Influenzanet services helper"
+    echo "Commands: "
+    echo "   all       : Build all known"
+    echo "   help      : Show help page"
+    echo "   api       : Build api (alias api-gateway)"
+    echo "   messaging : build messaging service (alias messaging-service)"
+    echo "   logging   : build logging service (alias logging-service)"
+    echo "   study     : build study service (alias study-service)"
+    echo "   user      : build user-management service (alias user-management-service)"
+}
+
+source ./conf
+
+TARGETS=$*
+
+if [ "$TARGETS" == "" ]; then
+  show_help
+  exit 0
+fi
+
+if [ "$TARGETS" == "all" ]; then
+  TARGETS="logging api messaging study user"
+fi
+
+docker_tag_push() {
+    from=$1
+    name=$2
+    version=$3
+    TAG=$DOCKER_NS/$name:$version
+    docker tag $from $TAG
+    if [ $DOCKER_PUSH -eq 1 ];
+    then
+        docker push $TAG
+    fi
+}
+
+echo "Updating env"
+python env.py
+
+for target in "$TARGETS" 
+do
+    echo "Building $target"
+    case $target in 
+
+    install)
+    ;;
+
+    web)
+        cp -f $DIR/env/public-web-app.env $WEB_APP_SRC/.env.local
+        name=web-app
+        cd $WEB_APP_SRC
+        version=$(get_git_tag)
+        make docker
+        docker_tag_push $IFN_NS/$name:$version $name $version
+     ;;
+
+    logging-service|logging)
+        cd $LOGGING_SRC
+        version=$(get_git_tag)
+        name=logging-service
+        make docker
+        docker_tag_push $IFN_NS/$name:$version $name $version
+    ;;
+
+    api-gateway|api)
+        cd $API_GATEWAY_SRC
+        make docker-participant-api
+        make docker-management-api
+        version=$(get_git_tag)
+        docker_tag_push $IFN_NS/participant-api:$version participant-api $version
+        docker_tag_push $IFN_NS/management-api:$version  management-api $version
+    ;;
+
+    messaging|messaging-service)
+        cd $MESSAGING_SRC
+        version=$(get_git_tag)
+        make docker-email-client
+        make docker-message-scheduler
+        make docker-messaging-service
+        docker_tag_push $IFN_NS/messaging-service:$version messaging-service $version
+        docker_tag_push $IFN_NS/message-scheduler:$version message-scheduler $version
+        docker_tag_push $IFN_NS/email-client-service:$version email-client-service $version
+    ;;
+        
+    study|study-service)
+        cd $STUDY_SRC
+        version=$(get_git_tag)
+        name=study-service
+        make docker
+        docker_tag_push $IFN_NS/$name:$version $name $version
+    ;;
+
+    user|user-management-service)
+        cd $USER_MANAGEMENT_SRC
+        version=$(get_git_tag)
+        name=user-management-service
+        make docker
+        docker_tag_push $IFN_NS/$name:$version $name $version
+    ;;
+
+    *)
+        echo "Unknown target $target"
+    esac
+
+    cd $DIR
+
+done

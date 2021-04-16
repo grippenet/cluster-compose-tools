@@ -1,0 +1,87 @@
+services:
+    logging:
+        image: docker.epipop.fr/ifn/logging-service:latest
+        container_name: logging
+        hostname: logging
+        env_file:
+          - env/common.env
+          - env/logging.env
+        ports:
+            - 5006:5006
+
+    user-management:
+        image: github.com/influenzanet/user-management-service:v0.19.2
+        container_name: user-management
+        hostname: user-management
+        env_file:
+          - env/common.env
+          - env/user-management.env
+        ports:
+            - 5002:5002
+    
+    study-service:
+        image: github.com/influenzanet/study-service:v0.14.0
+        container_name: study-service
+        hostname: study-service
+        env_file:
+          - env/common.env
+          - env/study-service.env
+        ports:
+            - 5003:5003
+        
+    messaging-service:
+        image: github.com/influenzanet/messaging-service:v0.9.2
+        container_name: messaging-service
+        hostname: messaging-service
+        env_file:
+          - env/common.env
+          - env/messaging-service.env
+        ports:
+            - 5004:5004
+
+    message-scheduler:
+        image: github.com/influenzanet/message-scheduler:v0.9.2
+        container_name: message-scheduler
+        hostname: message-scheduler
+        env_file:
+          - env/common.env
+          - env/message-scheduler.env
+
+    email-client-service:
+        image: github.com/influenzanet/email-client-service:v0.9.2
+        container_name: email-client-service 
+        hostname: email-client-service 
+        env_file:
+          - env/common.env
+          - env/email-client-service.env
+        volumes:
+          - ./config:/config
+        ports:
+          - 5005:5005
+    management-api:
+        image: github.com/influenzanet/management-api:v0.12.2
+        container_name: management-api
+        hostname: management-api
+        env_file:
+          - env/common.env
+          - env/management-api.env
+        ports:
+            - 8091:8091
+    participant-api:
+        image: github.com/influenzanet/participant-api:v0.12.2
+        container_name: participant-api 
+        hostname: participant-api
+        env_file:
+          - env/common.env
+          - env/participant-api.env
+        ports:
+            - 8090:8090
+    public-web-app:
+        image: docker.epipop.fr/ifn/web-app:latest
+        container_name: public-web-app 
+        hostname: public-web-app
+        env_file:
+          - env/common.env
+          - env/public-web-app.env
+        ports:
+          - 3000:80
