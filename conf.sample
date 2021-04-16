@@ -1,9 +1,11 @@
 
+# Configuration for the build command
+
 # DOCKER Namespace to push the images
-# For eaxmple youraccount/influenzanet
+# For example youraccount/influenzanet
 DOCKER_NS=
 
-# Push if 1
+# Push to registry if 1
 DOCKER_PUSH=0
 
 # Location of web app code
