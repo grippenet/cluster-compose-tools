@@ -1,6 +1,6 @@
 conf
-env/*.env
+env/
 config/
+envs/
 src/
-env.json
 run
