@@ -2,6 +2,8 @@
 ## Dev runnder
 ## Very poor man runner for services
 
+BASEDIR=$(cd "$DMG_DIRNAME" > /dev/null; pwd)
+
 if [ "$IFN_BUILD_DIR" != "" ]; then
     BIN_DIR=$IFN_BUILD_DIR
 else
@@ -12,6 +14,8 @@ if [ "$ENV_DIR" == "" ]; then
     echo "ENV_DIR environment variable is expected with env file locations"
     exit 1
 fi
+
+source $BASEDIR/conf
 
 # Pid and log file will go alongside with service binary ()
 PID_DIR=$BIN_DIR
@@ -62,53 +66,6 @@ show_help() {
 APPS="logging user study messaging message-scheduler email-client management-api participant-api"
 
 # Handle app shortcuts
-get_app_name() {
-    APP=""
-    case "$1" in
-
-        logging|logging_service_app)
-            APP=logging_service_app
-            ENV_NAME=logging-service
-        ;;
-
-        user|user-management-service-app)
-            APP=user-management-service-app
-            ENV_NAME=user-management-service
-        ;;
-
-        study|study-service-app)
-            APP=study-service-app
-            ENV_NAME=study-service
-        ;;
-
-        messaging|messaging-service)
-            APP=messaging-service
-            ENV_NAME=$APP
-        ;;
-
-        scheduler|message-scheduler)
-            APP=message-scheduler
-            ENV_NAME=$APP
-        ;;
-
-        email-client|email-client-service)
-            APP=email-client-service
-            ENV_NAME=$APP
-        ;;
-
-        api-management|management-api)
-            APP=management-api
-            ENV_NAME=$APP
-        ;;
-
-        api-participant|participant-api)
-            APP=participant-api
-            ENV_NAME=$APP
-        ;;
-
-    esac
-    echo $APP
-}
 
 get_pid() {
     PID_FILE=$PID_DIR/$1.pid
@@ -120,19 +77,100 @@ get_pid() {
     fi        
 }
 
+## Get App confi
+get_app_env() {
+    APP=""
+    SRC=""
+    ENV_NAME=""
+    MAKE_TARGET=""
+
+    case "$1" in
+
+        logging|logging_service_app)
+            APP=logging_service_app
+            ENV_NAME=logging-service
+            MAKE_TARGET=build
+        ;;
+
+        user|user-management-service-app)
+            APP=user-management-service-app
+            SRC=$USER_MANAGEMENT_SRC
+            ENV_NAME=user-management-service
+            MAKE_TARGET=build
+        ;;
+
+        study|study-service-app)
+            APP=study-service-app
+            SRC=$STUDY_SRC
+            ENV_NAME=study-service
+            MAKE_TARGET=build
+        ;;
+
+        messaging|messaging-service)
+            APP=messaging-service
+            SRC=$MESSAGING_SRC
+            ENV_NAME=$APP
+            MAKE_TARGET=build
+        ;;
+
+        scheduler|message-scheduler)
+            APP=message-scheduler
+            SRC=$MESSAGING_SRC
+            ENV_NAME=$APP
+            MAKE_TARGET=build
+        ;;
+
+        email-client|email-client-service)
+            APP=email-client-service
+            SRC=$MESSAGING_SRC
+            ENV_NAME=$APP
+            MAKE_TARGET=build
+        ;;
+
+        api-management|management-api)
+            SRC=$API_GATEWAY_SRC
+            APP=management-api
+            ENV_NAME=$APP
+            MAKE_TARGET=management-api
+        ;;
+
+        api-participant|participant-api)
+            APP=participant-api
+            SRC=$API_GATEWAY_SRC
+            ENV_NAME=$APP
+            MAKE_TARGET=$APP
+        ;;
+
+        *)
+            echo "Unknown app '$1'"
+        ;;
+        
+    esac
+}
+
 # Get app name for some actions 
 case "$action" in
- start|stop|status|pid)
-    APP=$(get_app_name $service)
+ start|stop|status|pid|info|build)
+    get_app_env $service
     if [ "$APP" == "" ];
     then
-        echo "Unknown service $service"
         exit 1
     fi
  ;;
 esac        
 
 case "$action" in 
+
+    info|build)
+        echo "App name $APP"
+        echo "Env name $ENV_NAME"
+        echo "Src dir  $SRC"
+    ;;
+
+    build)
+        cd $SRC
+        make $MAKE_TARGET
+    ;;
 
     start)
         PID=$(pgrep $APP)
@@ -209,7 +247,7 @@ case "$action" in
     running)
         for svc in $APPS
         do
-            APP=$(get_app_name $svc)
+            get_app_env $svc
             PID=$(get_pid $APP)
             RUNID=$(pgrep $APP)
             T_APP=${T_YELLOW}${APP}${T_DEF}
