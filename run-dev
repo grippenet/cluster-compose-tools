@@ -1,0 +1,240 @@
+#!/bin/sh
+## Dev runnder
+## Very poor man runner for services
+
+if [ "$IFN_BUILD_DIR" != "" ]; then
+    BIN_DIR=$IFN_BUILD_DIR
+else
+    BIN_DIR=$(dirname $0)
+fi
+
+if [ "$ENV_DIR" == "" ]; then
+    echo "ENV_DIR environment variable is expected with env file locations"
+    exit 1
+fi
+
+# Pid and log file will go alongside with service binary ()
+PID_DIR=$BIN_DIR
+LOG_PATH=$BIN_DIR
+
+set -a
+. $ENV_DIR/common.env
+set +a
+
+action=$1
+service=$2
+
+shift 2
+
+T_RED=\\033[31m
+T_GREEN=\\033[32m
+T_DEF=\\033[0m
+T_YELLOW=\\033[33m
+
+register_pid() {
+    PID=$1
+    APP=$2
+    if ps -p $PID > /dev/null
+    then
+        echo "$APP started with pid $PID"
+        echo $PID > $PID_DIR/$APP.pid
+    else
+        echo "Unable to find pid for $APP"
+    fi
+}
+
+show_help() {
+    echo "Usage run command service"
+    echo  "Commands"
+    echo  "   start, stop, status : obvious"
+    echo  "   pid                 : register current running process as managed pid"
+    echo  "Services"
+    echo  "  logging    : loggin service"
+    echo  "  study      : study service"
+    echo  "  user       : user-management-api service"
+    echo  "  messaging  : messaging service"
+    echo  "  scheduler  : message-schedule service"
+    echo  "  email-client  : email-client  service"
+    echo  "  management-api : management API service"
+    echo  "  participant-api : participant API  service"
+}
+
+APPS="logging user study messaging message-scheduler email-client management-api participant-api"
+
+# Handle app shortcuts
+get_app_name() {
+    APP=""
+    case "$1" in
+
+        logging|logging_service_app)
+            APP=logging_service_app
+            ENV_NAME=logging-service
+        ;;
+
+        user|user-management-service-app)
+            APP=user-management-service-app
+            ENV_NAME=user-management-service
+        ;;
+
+        study|study-service-app)
+            APP=study-service-app
+            ENV_NAME=study-service
+        ;;
+
+        messaging|messaging-service)
+            APP=messaging-service
+            ENV_NAME=$APP
+        ;;
+
+        scheduler|message-scheduler)
+            APP=message-scheduler
+            ENV_NAME=$APP
+        ;;
+
+        email-client|email-client-service)
+            APP=email-client-service
+            ENV_NAME=$APP
+        ;;
+
+        api-management|management-api)
+            APP=management-api
+            ENV_NAME=$APP
+        ;;
+
+        api-participant|participant-api)
+            APP=participant-api
+            ENV_NAME=$APP
+        ;;
+
+    esac
+    echo $APP
+}
+
+get_pid() {
+    PID_FILE=$PID_DIR/$1.pid
+    if [ -f $PID_FILE ];
+    then
+        cat $PID_DIR/$1.pid
+    else
+        echo "" 
+    fi        
+}
+
+# Get app name for some actions 
+case "$action" in
+ start|stop|status|pid)
+    APP=$(get_app_name $service)
+    if [ "$APP" == "" ];
+    then
+        echo "Unknown service $service"
+        exit 1
+    fi
+ ;;
+esac        
+
+case "$action" in 
+
+    start)
+        PID=$(pgrep $APP)
+        if [ "$PID" != "" ];
+        then 
+            echo "App $APP is already running with pid $PID"
+            exit 1
+        fi
+        set -a
+        . $ENV_DIR/$ENV_NAME.env
+        set +a
+        $BIN_DIR/$APP &> $LOG_PATH/$APP.log &
+        PID=$!
+        register_pid $PID $APP
+        sleep 3
+        ps -p $PID > /dev/null
+        if [ $? -ne 0 ];
+        then
+            echo "The process is not running any more"
+        fi
+    ;;
+
+    stop)
+        PID=$(get_pid $APP)
+        if [ "$PID" == "" ];
+        then
+           echo "Unable to find pid for app $APP"
+           exit 1
+        fi
+        ps -p $PID > /dev/null
+        if [ $? -eq 0 ];
+        then
+            kill -9 $PID
+            sleep 5
+            ps -p $PID > /dev/null
+            if  [ $? -eq 0 ];
+            then
+                echo "process $PID still running cannot stop ?"
+            else 
+                rm $PID_DIR/$APP.pid
+            fi
+        else
+            echo "Unable to find $PID for $APP"
+        fi
+    ;;
+
+    status)
+        PID=$(cat $PID_DIR/$APP.pid)
+        AID=$(pgrep $APP)
+         ps -p $PID > /dev/null
+        if [ $? -eq 0 ];
+        then
+            if [ "$PID" == "$AID" ]; then
+                echo "$APP is running with pid $PID"
+            else
+                echo "$APP is running under $AID but registred as $PID, update with pid command"
+            fi
+        else
+            echo "Unable to find $PID for $APP"
+        fi
+    ;;
+
+    pid)
+        PID=$(pgrep $APP)
+        if [ "$PID" != "" ];
+        then
+            echo "Registering $PID for $APP"
+            echo $PID > $PID_DIR/$APP.pid
+        else 
+            echo "Unable to find $APP"
+        fi
+    ;;
+
+    running)
+        for svc in $APPS
+        do
+            APP=$(get_app_name $svc)
+            PID=$(get_pid $APP)
+            RUNID=$(pgrep $APP)
+            T_APP=${T_YELLOW}${APP}${T_DEF}
+            if [ "$RUNID" != "" ];
+            then
+                if [ "$PID" == "$RUNID" ]; 
+                then
+                    echo "- $T_APP is ${T_GREEN}running${T_DEF} with pid $PID"
+                else
+                    echo "- $T_APP is ${T_GREEN}running${T_DEF} under $RUNID but registred as $PID, update with pid command"
+                fi
+            else
+                if [ "$PID" != "" ]; 
+                then
+                    rm $PID_DIR/$APP.pid # Remove old pid
+                    echo "- $T_APP is ${T_RED}not runnning${T_DEF} (but PID $PID was registred, removed)"
+                else
+                    echo "- $T_APP is ${T_RED}not running${T_DEF}"
+                fi
+            fi
+        done
+    ;;
+
+    *)
+        echo "Unknown action '$action'"
+        show_help
+    ;;
+esac
