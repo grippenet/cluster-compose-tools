@@ -52,6 +52,9 @@ with open(target_dir + '/env.json','r') as fp:
 
 data = update_data(data)
 
+# Can use {{ENV_DIR}} to relate to current environment dir
+data['ENV_DIR'] = target_dir
+
 print("Building env from %s" % (target_dir))
 count = 0
 for file in glob.glob('templates/*.tpl'):
