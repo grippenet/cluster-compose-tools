@@ -16,7 +16,8 @@ Default conf use src/ location, you can use this path and create symlink to your
 ## Configuration
 
 - copy conf.sample to 'conf' and edit it with your setting
-- copy env.json.sample to env.json and edit it with your setting
+- Create an directory to contains the built files (e.g 'env/')
+- copy env.json.sample to env/env.json and edit it with your setting
 
 conf file will contain the configuration used by the `build` command, and the env.json the variables used to build the environment files 
 from the templates
