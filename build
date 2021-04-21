@@ -60,7 +60,7 @@ do
     ;;
 
     web)
-        cp -f $DIR/env/public-web-app.env $WEB_APP_SRC/.env.local
+        cp -f $ENV_DIR/public-web-app.env $WEB_APP_SRC/.env.local
         name=web-app
         cd $WEB_APP_SRC
         version=$(get_git_tag)
@@ -116,6 +116,6 @@ do
         echo "Unknown target $target"
     esac
 
-    cd $DIR
+    cd $BASEDIR
 
 done
