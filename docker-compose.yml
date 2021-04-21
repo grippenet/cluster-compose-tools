@@ -5,7 +5,7 @@ services:
         hostname: logging
         env_file:
           - env/common.env
-          - env/logging.env
+          - env/logging-service.env
         ports:
             - 5006:5006
 
@@ -15,7 +15,7 @@ services:
         hostname: user-management
         env_file:
           - env/common.env
-          - env/user-management.env
+          - env/user-management-service.env
         ports:
             - 5002:5002
     
