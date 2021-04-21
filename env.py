@@ -16,7 +16,7 @@ def parse(content, data):
         if not name_pattern.match(name):
             raise Exception("Variable '%s' is not a good variable name" % (name))
         if not name in data:
-            raise Exception("Variable '%s' is not known")
+            raise Exception("Variable '%s' is not known" % (name))
         value = data[name]
         var = '{{' + name + '}}'
         content = content.replace(var, value)
@@ -50,10 +50,10 @@ if len(sys.argv) > 1:
 with open(target_dir + '/env.json','r') as fp:
     data = json.load(fp)
 
-data = update_data(data)
-
 # Can use {{ENV_DIR}} to relate to current environment dir
 data['ENV_DIR'] = target_dir
+
+data = update_data(data)
 
 print("Building env from %s" % (target_dir))
 count = 0
