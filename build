@@ -49,7 +49,7 @@ docker_tag_push() {
 }
 
 echo "Updating env"
-python env.py
+python env.py $ENV_DIR 
 
 for target in "$TARGETS" 
 do
