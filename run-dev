@@ -52,6 +52,7 @@ show_help() {
     echo  "Commands"
     echo  "   start, stop, status : obvious"
     echo  "   pid                 : register current running process as managed pid"
+    echo  "   webenv              : update .env.local into web site"
     echo  "Services"
     echo  "  logging    : loggin service"
     echo  "  study      : study service"
@@ -141,6 +142,13 @@ get_app_env() {
             MAKE_TARGET=$APP
         ;;
 
+        web)
+            APP=public-web-app
+            SRC=$WEB_APP_SRC
+            ENV_NAME=$APP
+            MAKE_TARGET=
+        ;;    
+
         *)
             echo "Unknown app '$1'"
         ;;
@@ -170,6 +178,13 @@ case "$action" in
     build)
         cd $SRC
         make $MAKE_TARGET
+    ;;
+
+    webenv)
+        get_app_env web
+        file=$ENV_DIR/$ENV_NAME.env
+        echo "Installing $file into $SRC"
+        cp -f $file $SRC/.env.local
     ;;
 
     start)
